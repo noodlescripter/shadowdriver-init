@@ -1,0 +1,23 @@
+{
+  "name": "shadowdriver-init",
+  "version": "1.0.1",
+  "description": "shadowdriver-initializer, for creating templates and project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"NONE\""
+  },
+  "keywords": [
+    "shadowdriverJS",
+    "shadowdriverjs-init"
+  ],
+  "author": "Hamim Alam",
+  "license": "MIT",
+  "bin": {
+    "shadowdriverjs-init": "index.js"
+  },
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "commander": "^11.1.0",
+    "glob": "^10.3.10"
+  }
+}
