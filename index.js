@@ -72,7 +72,7 @@ rl.question('Enter the project name: ', (projectName) => {
     createProjectFolder(projectName);
     rl.question('Do you want to run "npm install"? (yes/no): ', (answer) => {
         if (answer.toLowerCase() === 'yes' || answer.toLowerCase() === 'y' || answer.toLowerCase() === null || answer.toLowerCase() === '') {
-            exec(`cd ${projectName} && npm install shadowdriverjs`, (error, stdout, stderr) => {
+            exec(`cd ${projectName} && npm i shadowdriverjs@1.0.2-beta.1`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(chalk.red(`Error running npm install: ${error}`));
                 } else {
