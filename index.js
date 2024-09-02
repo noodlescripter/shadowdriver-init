@@ -1,15 +1,40 @@
 #!/usr/bin/env node
+
+/**
+ * Project Initialization Script for ShadowdriverJS
+ * 
+ * This script helps in creating a new project folder with the necessary files
+ * and content for running tests with ShadowdriverJS. It also provides an option
+ * to run `npm install` to install the required dependencies.
+ * 
+ * Usage:
+ * - Run this script using Node.js
+ * - Follow the prompts to enter the project name and decide whether to run `npm install`
+ * 
+ * Note: Ensure that this script has executable permissions.
+ */
+
+/**
+ * Module dependencies.
+ */
 const fs = require('fs');
 const readline = require('readline');
 const { exec } = require('child_process');
 const chalk = require('chalk');
 
+/**
+ * Create a readline interface for user input.
+ */
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
-// Function to create a project folder and files with content
+/**
+ * Function to create a project folder and files with content.
+ * 
+ * @param {string} projectName - The name of the project folder to create.
+ */
 function createProjectFolder(projectName) {
     const projectPath = `./${projectName}`;
 
@@ -18,22 +43,32 @@ function createProjectFolder(projectName) {
         fs.mkdirSync(projectPath);
         fs.mkdirSync(`${projectPath}/e2e`);
     } else {
-        console.error(chalk.red(`The project folder "${projectName}" already exists. Aborting.`));
+        console.error(chalk.red(`The project folder "${projectName}" already exists. Aborting in peace.`));
         process.exit(1);
     }
 
     // Create files with content
     const fileContents = {
         'shadow.conf.js': 'module.exports = {\n' +
-            '    browserName: \'chrome\',\n' +
+            '    framework: "mocha",\n' +
+            '    ai_res: true,\n' +
+            '    capabilities: {\n' +
+            '        browserName: \'chrome\',\n' +
+            '    },\n' +
             '    mochaTimeout: 90000,\n' +
+            '\n' +
             '    reportName: \'report.html\',\n' +
             '    baseURL: \'https://google.com/\',\n' +
             '    specs: [\n' +
             '        \'e2e/sample.spec.js\'\n' +
             '    ],\n' +
+            '    suites:{\n' +
+            '\n' +
+            '    },\n' +
             '    onPrepare: () => {\n' +
             '        browser.manage().window().maximize();\n' +
+            '    },\n' +
+            '    before:()  =>{\n' +
             '    }\n' +
             '};\n',
         'package.json': '{ "name": "' + projectName + '", "version": "1.0.0", "description": "shadowdriverJS testing library, built on top of WebdriverJS. Built with respect to ProtractorJS", "main": "", "scripts": { "shadow": "node ./node_modules/shadowdriverjs/shadow.js" }, "author": "", "license": "ISC" }',
@@ -48,7 +83,7 @@ function createProjectFolder(projectName) {
         await element(by.xpath('//*[@title="Search"]')).sendKeys("Hello");
         await browser.sleep(3000);
         await element(by.xpath('//*[@title="Search"]')).clear();
-        await element(by.xpath('//*[@title="Search"]')).sendKeys("tor mare chudi");
+        await element(by.xpath('//*[@title="Search"]')).sendKeys("shadowdriverJS");
         await browser.sleep(3000);
         const windows = await browser.getAllWindowHandles();
         if (windows.length > 2) {
@@ -61,6 +96,7 @@ function createProjectFolder(projectName) {
 });
 `;
 
+    // Write the content to the respective files
     for (const fileName in fileContents) {
         fs.writeFileSync(`${projectPath}/${fileName}`, fileContents[fileName]);
     }
@@ -68,11 +104,14 @@ function createProjectFolder(projectName) {
     console.log(chalk.green(`Project folder "${projectName}" created with files and content in the current directory.`));
 }
 
+/**
+ * Main function to handle user input and project creation.
+ */
 rl.question('Enter the project name: ', (projectName) => {
     createProjectFolder(projectName);
     rl.question('Do you want to run "npm install"? (yes/no): ', (answer) => {
         if (answer.toLowerCase() === 'yes' || answer.toLowerCase() === 'y' || answer.toLowerCase() === null || answer.toLowerCase() === '') {
-            exec(`cd ${projectName} && npm i shadowdriverjs@1.0.3-beta.1`, (error, stdout, stderr) => {
+            exec(`cd ${projectName} && npm i shadowdriverjs@latest`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(chalk.red(`Error running npm install: ${error}`));
                 } else {
