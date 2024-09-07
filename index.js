@@ -97,10 +97,17 @@ function createProjectFolder(projectName) {
 `;
 
     // Write the content to the respective files
-    for (const fileName in fileContents) {
-        fs.writeFileSync(`${projectPath}/${fileName}`, fileContents[fileName]);
-    }
-    fs.writeFileSync(`${projectPath}/e2e/sample.spec.js`, e2eSampleSpec);
+    const confFile = fs.readFileSync(`./client_files/shadow.conf.txt`, 'utf-8');
+    const packageJson = fs.readFileSync(`./client_files/package.json`, 'utf-8');
+    const sampleSpec = fs.readFileSync(`./client_files/sample.spec.txt`, 'utf-8');
+
+    //
+    fs.writeFileSync(`${projectPath}/shadow.conf.js`, confFile);
+
+    let packageContent = packageJson.replace(`"name": "DemoProject"`, `"name": "${projectName}"`);
+    fs.writeFileSync(`${projectPath}/package.json`, packageContent);
+
+    fs.writeFileSync(`${projectPath}/e2e/sample.spec.js`, sampleSpec);
     console.log(chalk.green(`Project folder "${projectName}" created with files and content in the current directory.`));
 }
 

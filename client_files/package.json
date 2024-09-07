@@ -1,0 +1,11 @@
+{
+  "name": "DemoProject",
+  "version": "1.0.0",
+  "description": "shadowdriverJS testing library, built on top of WebdriverJS. Built with respect to ProtractorJS",
+  "main": "",
+  "scripts": {
+    "shadow": "node ./node_modules/shadowdriverjs/shadow.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
