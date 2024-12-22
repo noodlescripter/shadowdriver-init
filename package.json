@@ -1,10 +1,11 @@
 {
   "name": "shadowdriver-init",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "description": "shadowdriver-initializer, for creating templates and project",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"NONE\""
+    "test": "echo \"NONE\"",
+    "patch": "npm version patch"
   },
   "keywords": [
     "shadowdriverJS",
@@ -15,9 +16,20 @@
   "bin": {
     "shadowdriverjs-init": "index.js"
   },
+  "files": [
+    "index.js",
+    "client_files/**",
+    "lib/**",
+    "templates/**",
+    "README,md"
+  ],
   "dependencies": {
+    "boxen": "^7.1.1",
     "chalk": "^2.4.2",
     "commander": "^11.1.0",
-    "glob": "^10.3.10"
+    "figlet": "^1.8.0",
+    "glob": "^10.3.10",
+    "gradient-string": "^2.0.2",
+    "ora": "^5.4.1"
   }
 }

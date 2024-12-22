@@ -1,136 +1,302 @@
 #!/usr/bin/env node
 
-/**
- * Project Initialization Script for ShadowdriverJS
- * 
- * This script helps in creating a new project folder with the necessary files
- * and content for running tests with ShadowdriverJS. It also provides an option
- * to run `npm install` to install the required dependencies.
- * 
- * Usage:
- * - Run this script using Node.js
- * - Follow the prompts to enter the project name and decide whether to run `npm install`
- * 
- * Note: Ensure that this script has executable permissions.
- */
-
-/**
- * Module dependencies.
- */
 const fs = require('fs');
 const readline = require('readline');
 const { exec } = require('child_process');
 const chalk = require('chalk');
+const { log, info, error } = require('console');
 
-/**
- * Create a readline interface for user input.
- */
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-/**
- * Function to create a project folder and files with content.
- * 
- * @param {string} projectName - The name of the project folder to create.
- */
-function createProjectFolder(projectName) {
-    const projectPath = `./${projectName}`;
-
-    // Create the project folder in the current directory if it doesn't exist
-    if (!fs.existsSync(projectPath)) {
-        fs.mkdirSync(projectPath);
-        fs.mkdirSync(`${projectPath}/e2e`);
-    } else {
-        console.error(chalk.red(`The project folder "${projectName}" already exists. Aborting in peace.`));
-        process.exit(1);
-    }
-
-    // Create files with content
-    const fileContents = {
-        'shadow.conf.js': 'module.exports = {\n' +
-            '    framework: "mocha",\n' +
-            '    ai_res: true,\n' +
-            '    capabilities: {\n' +
-            '        browserName: \'chrome\',\n' +
-            '    },\n' +
-            '    mochaTimeout: 90000,\n' +
-            '\n' +
-            '    reportName: \'report.html\',\n' +
-            '    baseURL: \'https://google.com/\',\n' +
-            '    specs: [\n' +
-            '        \'e2e/sample.spec.js\'\n' +
-            '    ],\n' +
-            '    suites:{\n' +
-            '\n' +
-            '    },\n' +
-            '    onPrepare: () => {\n' +
-            '        browser.manage().window().maximize();\n' +
-            '    },\n' +
-            '    before:()  =>{\n' +
-            '    }\n' +
-            '};\n',
-        'package.json': '{ "name": "' + projectName + '", "version": "1.0.0", "description": "shadowdriverJS testing library, built on top of WebdriverJS. Built with respect to ProtractorJS", "main": "", "scripts": { "shadow": "node ./node_modules/shadowdriverjs/shadow.js" }, "author": "", "license": "ISC" }',
-        'jsconfig.json': '{ "compilerOptions": { "target": "ES6" } }'
-    };
-
-    const e2eSampleSpec = `describe('Sample Test Suite', async function () {
-
-    it('should perform a sample test case', async function () {
-        await browser.get(baseURL);
-        await browser.sleep(3000);
-        await element(by.xpath('//*[@title="Search"]')).sendKeys("Hello");
-        await browser.sleep(3000);
-        await element(by.xpath('//*[@title="Search"]')).clear();
-        await element(by.xpath('//*[@title="Search"]')).sendKeys("shadowdriverJS");
-        await browser.sleep(3000);
-        const windows = await browser.getAllWindowHandles();
-        if (windows.length > 2) {
-            console.info("Many windows found");
-        } else {
-            console.info("No window is here, only one");
-        }
-        await browser.quit();
-    });
-});
+const ASCII_LOGO = `
+  _____ _   _    _    _   _ _  __    __   _____  _   _                        
+ |_   _| | | |  / \  | \\ | | |/ /    \\ \\ / / _ \\| | | |                       
+   | | | |_| | / _ \\ |  \\| | ' /      \\ V / | | | | | |                       
+   | | |  _  |/ ___ \\| |\\  | . \\       | || |_| | |_| |                       
+   |_| |_| |_/_/   \\_\\_| \\_|_|\\_\\__    |_| \\___/ \\___/                        
+                   |  ___/ _ \\|  _ \\                                          
+                   | |_ | | | | |_) |                                         
+                   |  _|| |_| |  _ <                                          
+    ___ _   _ ____ |_|__ \\___/|_| \\_\\_     ___ _   _  ____                    
+   |_ _| \\ | / ___|_   _|/ \\  | |   | |   |_ _| \\ | |/ ___|                   
+    | ||  \\| \\___ \\ | | / _ \\ | |   | |    | ||  \\| | |  _                    
+    | || |\\  |___) || |/ ___ \\| |___| |___ | || |\\  | |_| |                   
+   |___|_| \\_|____/ |_/_/   \\_\\_____|_____|___|_| \\_|\\____|         _ ____    
+  ___| |__   __ _  __| | _____      ____| |_ __(_)_   _____ _ __   | / ___|   
+ / __| '_ \\ / _\` |/ _\` |/ _ \\ \\ /\\ / / _\` | '__| \\ \\ / / _ \\ '__|  | \\___ \\   
+ \\__ \\ | | | (_| | (_| | (_) \\ V  V / (_| | |  | |\\ V /  __/ | | |_| |___) |  
+ |___/_| |_|\\__,_|\\__,_|\\___/ \\_/\\_/_\\__,_|_| _|_| \\_/ \\___|_|__\\___/|____/ _ 
+ | | | |  / \\  |  _ \\|  _ \\ \\ / /  / ___/ _ \\|  _ \\_ _| \\ | |/ ___|    | | | |
+ | |_| | / _ \\ | |_) | |_) \\ V /  | |  | | | | | | | ||  \\| | |  _     | | | |
+ |  _  |/ ___ \\|  __/|  __/ | |   | |__| |_| | |_| | || |\\  | |_| |    |_|_|_|
+ |_| |_/_/   \\_\\_|   |_|    |_|    \\____\\___/|____/___|_| \\_|\\____|    (_|_|_)
 `;
 
-    // Write the content to the respective files
-    const confFile = fs.readFileSync(`./client_files/shadow.conf.txt`, 'utf-8');
-    const packageJson = fs.readFileSync(`./client_files/package.json`, 'utf-8');
-    const sampleSpec = fs.readFileSync(`./client_files/sample.spec.txt`, 'utf-8');
+const FUNNY_MESSAGES = [
+    "🎯 You've just unlocked the secret testing weapon!",
+    "🧙‍♂️ Welcome to the Hogwarts of Testing - Debugging made magical!",
+    "🎮 Player 1 has entered the testing game! Press Start!",
+    "🚀 Houston, we have a solution! Testing is now awesome!",
+    "🎪 Welcome to the greatest show in testing!",
+    "🦸‍♂️ Your testing superpower has been activated!",
+    "🎭 Plot twist: Testing is now your favorite part!",
+    "🌟 You're officially cooler than 98% of developers!",
+    "🎨 Time to paint your code with awesome tests!",
+    "🎸 Let's rock this testing world!"
+];
 
-    //
-    fs.writeFileSync(`${projectPath}/shadow.conf.js`, confFile);
+const LOADING_MESSAGES = [
+    "🔍 Initializing quantum bug detector...",
+    "🏃 Teaching your tests parkour moves...",
+    "🧪 Brewing some testing magic...",
+    "🎮 Loading testing superpowers...",
+    "🎯 Calibrating the awesome-meter...",
+    "🎪 Training ninja testers...",
+    "🎭 Preparing your testing arena...",
+    "🚀 Fueling the testing rockets...",
+    "🧙‍♂️ Casting testing spells...",
+    "🦸‍♂️ Assembling the Testing Avengers..."
+];
 
-    let packageContent = packageJson.replace(`"name": "DemoProject"`, `"name": "${projectName}"`);
-    fs.writeFileSync(`${projectPath}/package.json`, packageContent);
+const ERROR_MESSAGES = [
+    "🦹‍♂️ Even Batman has bad days...",
+    "🚫 Error 404: Success not found (but we'll fix that!)",
+    "😅 Oops! Our code monkeys need a coffee break...",
+    "🎭 Plot twist: This wasn't supposed to happen!",
+    "🎪 The circus is temporarily closed for maintenance..."
+];
 
-    fs.writeFileSync(`${projectPath}/e2e/sample.spec.js`, sampleSpec);
-    console.log(chalk.green(`Project folder "${projectName}" created with files and content in the current directory.`));
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/**
- * Main function to handle user input and project creation.
- */
-rl.question('Enter the project name: ', (projectName) => {
-    createProjectFolder(projectName);
-    rl.question('Do you want to run "npm install"? (yes/no): ', (answer) => {
-        if (answer.toLowerCase() === 'yes' || answer.toLowerCase() === 'y' || answer.toLowerCase() === null || answer.toLowerCase() === '') {
-            exec(`cd ${projectName} && npm i shadowdriverjs@latest`, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(chalk.red(`Error running npm install: ${error}`));
-                } else {
-                    console.log(chalk.green(stdout));
-                    console.log(chalk.magenta('The developer of this library is looking for a good job: github@noodlescripter, hamim.alam.personal@gmail.com, hamimalam@outlook.com'));
-                    console.log(chalk.yellow('Thank you for installing @shadowdriverJS. Know that it is still in BETA..... Happy Coding!'));
-                }
-                rl.close();
-            });
-        } else {
-            console.log(chalk.green('Skipping npm install. Help yourself by doing it manually!'));
-            rl.close();
-        }
+function getRandomMessage(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+function createBox(message, color = 'white') {
+    const lines = message.split('\n');
+    const maxLength = Math.max(...lines.map(line => line.length));
+    const horizontalBorder = '═'.repeat(maxLength + 4);
+    
+    return chalk[color](`
+╔${horizontalBorder}╗
+║  ${lines.join(`  ║\n║  `)}  ║
+╚${horizontalBorder}╝
+`);
+}
+
+function displayProgressBar(progress, total) {
+    const barLength = 30;
+    const filledLength = Math.round(barLength * progress / total);
+    const empty = barLength - filledLength;
+    const bar = '█'.repeat(filledLength) + '░'.repeat(empty);
+    const loadingMessage = getRandomMessage(LOADING_MESSAGES);
+    process.stdout.write(`\r${chalk.cyan(loadingMessage)} [${chalk.green(bar)}] ${Math.round(progress/total*100)}%`);
+}
+
+async function displayColorfulASCII() {
+    console.clear();
+    const lines = ASCII_LOGO.split('\n');
+    const colors = ['blue', 'cyan', 'magenta', 'yellow'];
+
+    for (let i = 0; i < lines.length; i++) {
+        const color = colors[i % colors.length];
+        process.stdout.write('\r' + chalk[color](lines[i]) + '\n');
+        await sleep(50);
+    }
+
+    await sleep(200);
+    console.log(chalk.cyan('\n' + '═'.repeat(80)));
+    console.log(chalk.bold.yellow('\n' + ' '.repeat(10) + getRandomMessage(FUNNY_MESSAGES) + '\n'));
+    console.log(chalk.magenta(' '.repeat(15) + "Side effects include: Excessive testing confidence and random high-fives! 😎"));
+    console.log(chalk.cyan('═'.repeat(80) + '\n'));
+}
+async function initializeNpmProject(projectPath, projectName) {
+    return new Promise((resolve, reject) => {
+        exec(`cd ${projectPath} && npm init -y`, async (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            try {
+                const packageJsonPath = `${projectPath}/package.json`;
+                const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+                packageJson.name = projectName;
+                packageJson.version = "1.0.0";
+                packageJson.description = "Test automation project using ShadowdriverJS";
+                packageJson.scripts = {
+                    "test": "shadowdriver run",
+                    "shadowdriver": "shadowdriver run"
+                };
+                packageJson.dependencies = {
+                    "shadowdriverjs": "^2.0.0"
+                };
+                packageJson.keywords = ["testing", "automation", "shadowdriver", "e2e"];
+                packageJson.author = "";
+                packageJson.license = "MIT";
+
+                fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
     });
-});
+}
+
+
+async function createProjectFolder(projectName) {
+    console.log(chalk.cyan('\n📁 Time to create something awesome...'));
+    const projectPath = `./${projectName}`;
+
+    try {
+        if (fs.existsSync(projectPath)) {
+            console.log(createBox(
+                `Hold up! "${projectName}" already exists!\nEven Doctor Strange can't handle parallel universes with the same project!`, 
+                'red'
+            ));
+            process.exit(1);
+        }
+
+        fs.mkdirSync(projectPath);
+        displayProgressBar(1, 5);
+        await sleep(500);
+        
+        fs.mkdirSync(`${projectPath}/e2e`);
+        displayProgressBar(2, 5);
+        await sleep(500);
+
+        await initializeNpmProject(projectPath, projectName);
+        displayProgressBar(3, 5);
+        await sleep(500);
+
+        const confFile = fs.readFileSync(`./client_files/shadow.conf.txt`, 'utf-8');
+        fs.writeFileSync(`${projectPath}/shadow.conf.js`, confFile);
+        displayProgressBar(4, 5);
+        await sleep(500);
+
+        const sampleSpec = fs.readFileSync(`./client_files/sample.spec.txt`, 'utf-8');
+        fs.writeFileSync(`${projectPath}/e2e/sample.spec.js`, sampleSpec);
+        displayProgressBar(5, 5);
+        await sleep(500);
+
+        console.log('\n');
+        console.log(createBox('🎉 Achievement Unlocked: Project Creation Master!', 'green'));
+    } catch (err) {
+        console.log(createBox(`${getRandomMessage(ERROR_MESSAGES)}\n${err.message}`, 'red'));
+        process.exit(1);
+    }
+}
+
+function displaySuccessMessage(projectName) {
+    const successMessage = `
+🎉 Level Up! Your Testing Journey Begins! 🎮
+
+Quick Start Guide for Testing Heroes:
+  1. cd ${projectName}         (Enter your new testing dimension)
+  2. npm test                  (Unleash the testing magic)
+  3. npm run shadowdriver      (Start your testing adventure)
+
+🎓 Need the ancient scrolls of knowledge?
+  https://github.com/noodlescripter/shadowdriverjs
+
+Remember: Great testing comes with great reliability! 🦸‍♂️
+    `;
+    
+    console.log(createBox(successMessage, 'green'));
+}
+
+async function displayDeveloperInfo() {
+    console.log(createBox(`
+╭────────────── About The Developer (Open for Work) ───────────────╮
+
+👨‍💻 Hamim Alan
+   Senior Software Engineer & Test Automation Architect
+
+🛠️ Core Skills:
+   ◆ Sr. Full Stack Development (Node.js, React, Java)
+   ◆ Sr. Test Automation Architecture
+   ◆ CI/CD & DevOps Engineering
+
+📫 Connect With Me:
+   ◆ Email: hamimalam@outlook.com
+   ◆ GitHub: github@noodlescripter
+   ◆ LinkedIn: https://www.linkedin.com/in/hamim-alam/
+
+🎯 Open to Opportunities:
+   ◆ Senior Software Engineering
+   ◆ Test Automation Lead
+   ◆ DevOps Engineering
+
+"Passionate about creating robust, scalable solutions
+ and building amazing testing frameworks!"
+
+╰─────────────────────────────────────────────────╯
+    `, 'cyan'));
+}
+
+async function main() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    try {
+        await displayColorfulASCII();
+        
+        const projectName = await new Promise(resolve => {
+            rl.question(chalk.cyan('\n🎭 What shall we name your testing masterpiece?: '), resolve);
+        });
+
+        await createProjectFolder(projectName);
+
+        const installAnswer = await new Promise(resolve => {
+            rl.question(chalk.cyan('\n📦 Ready to install the testing superpowers? (Y/n): '), resolve);
+        });
+
+        if (!/^n$/i.test(installAnswer)) {
+            console.log(createBox('🧙‍♂️ Installing ShadowdriverJS... Please wait while we perform some magic...', 'cyan'));
+            await new Promise((resolve, reject) => {
+                exec(`cd ${projectName} && npm i shadowdriverjs`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.log(createBox('Failed to install ShadowdriverJS! The magic fizzled out!', 'red'));
+                        reject(error);
+                        return;
+                    }
+                    console.log(stdout);
+                    resolve();
+                });
+            });
+        }
+
+        displaySuccessMessage(projectName);
+        
+        rl.close();
+
+        await sleep(1000);
+        console.clear();
+        
+        console.log(createBox(`
+        🎉 Mission Accomplished! Installation Complete! 🎉
+        
+        Welcome to the Testing Elite Squad! 🦸‍♂️
+        Your bugs don't stand a chance now!
+        
+        Remember: When in doubt, test it out! 
+        
+        Made with ❤️  and probably too much ☕ by ShadowdriverJS Team
+        
+        P.S. You're breathtaking! (Yes, you!) 🌟
+        `, 'magenta'));
+
+        await sleep(500);
+        await displayDeveloperInfo();
+
+    } catch (err) {
+        console.log(createBox(`${getRandomMessage(ERROR_MESSAGES)}\n${err.message}`, 'red'));
+        rl.close();
+    }
+}
+
+main();
