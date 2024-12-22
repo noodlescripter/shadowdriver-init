@@ -4,7 +4,7 @@
   "description": "shadowdriverJS testing library, built on top of WebdriverJS. Built with respect to ProtractorJS",
   "main": "",
   "scripts": {
-    "shadow": "node ./node_modules/shadowdriverjs/shadow.js"
+    "test": "shadow"
   },
   "author": "",
   "license": "ISC"

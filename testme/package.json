@@ -1,0 +1,21 @@
+{
+  "name": "testme",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "shadowdriver run",
+    "shadowdriver": "shadowdriver run"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "shadowdriver",
+    "e2e"
+  ],
+  "author": "",
+  "license": "MIT",
+  "description": "Test automation project using ShadowdriverJS",
+  "dependencies": {
+    "shadowdriverjs": "^2.0.0"
+  }
+}
