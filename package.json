@@ -1,6 +1,6 @@
 {
   "name": "shadowdriver-init",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "shadowdriver-initializer, for creating templates and project",
   "main": "index.js",
   "scripts": {

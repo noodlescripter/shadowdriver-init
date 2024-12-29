@@ -6,11 +6,15 @@ const { exec } = require("child_process");
 const chalk = require("chalk");
 const { log, info, error } = require("console");
 
-const confFile = `
-const path = require('path')
+const confFile = `const path = require("path")
 module.exports = {
   // Specifies the testing framework to use. In this case, it's Mocha.
   framework: "mocha",
+
+  //suites configuration
+  suites: {
+    dummyTest: ["e2e/sample.spec.js", "e2e/sample.spec2.js"],
+  },
 
   // This line seems to be a custom option, likely specific to your setup.
   // It might be used to enable some AI-related features in your tests.
@@ -26,8 +30,11 @@ module.exports = {
     //chromeversion
     version: "131.0.6778.85",
     // Provides Chrome-specific options.
-    browserPath: path.resolve("browser/browserBinary/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"),
-    driverPath: path.resolve("driver/browserDriver/chromedriver"),
+    // browserPath: path.resolve("browser/browserBinary/chrome.exe"), //Win 10/11
+    // browserPath: path.resolve("browser/browserBinary/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"), //M Mac OS
+    browserPath: path.resolve("browser/browserBinary/chrome"), //Linux (Ubuntu)
+    driverPath: path.resolve("driver/browserDriver/chromedriver"), // Linux or Mac
+    //driverPath: path.resolve("driver/browserDriver/chromedriver.exe"), //Win 10/11
     "goog:chromeOptions": {
       //binary
       // Passes arguments to the Chrome browser.
@@ -86,31 +93,38 @@ module.exports = {
     generate_HTML("./")
   },
 }
-
-`;
+`
 
 const ASCII_LOGO = `
-  _____ _   _    _    _   _ _  __    __   _____  _   _                        
- |_   _| | | |  / \  | \\ | | |/ /    \\ \\ / / _ \\| | | |                       
-   | | | |_| | / _ \\ |  \\| | ' /      \\ V / | | | | | |                       
-   | | |  _  |/ ___ \\| |\\  | . \\       | || |_| | |_| |                       
-   |_| |_| |_/_/   \\_\\_| \\_|_|\\_\\__    |_| \\___/ \\___/                        
-                   |  ___/ _ \\|  _ \\                                          
-                   | |_ | | | | |_) |                                         
-                   |  _|| |_| |  _ <                                          
-    ___ _   _ ____ |_|__ \\___/|_| \\_\\_     ___ _   _  ____                    
-   |_ _| \\ | / ___|_   _|/ \\  | |   | |   |_ _| \\ | |/ ___|                   
-    | ||  \\| \\___ \\ | | / _ \\ | |   | |    | ||  \\| | |  _                    
-    | || |\\  |___) || |/ ___ \\| |___| |___ | || |\\  | |_| |                   
-   |___|_| \\_|____/ |_/_/   \\_\\_____|_____|___|_| \\_|\\____|         _ ____    
-  ___| |__   __ _  __| | _____      ____| |_ __(_)_   _____ _ __   | / ___|   
- / __| '_ \\ / _\` |/ _\` |/ _ \\ \\ /\\ / / _\` | '__| \\ \\ / / _ \\ '__|  | \\___ \\   
- \\__ \\ | | | (_| | (_| | (_) \\ V  V / (_| | |  | |\\ V /  __/ | | |_| |___) |  
- |___/_| |_|\\__,_|\\__,_|\\___/ \\_/\\_/_\\__,_|_| _|_| \\_/ \\___|_|__\\___/|____/ _ 
- | | | |  / \\  |  _ \\|  _ \\ \\ / /  / ___/ _ \\|  _ \\_ _| \\ | |/ ___|    | | | |
- | |_| | / _ \\ | |_) | |_) \\ V /  | |  | | | | | | | ||  \\| | |  _     | | | |
- |  _  |/ ___ \\|  __/|  __/ | |   | |__| |_| | |_| | || |\\  | |_| |    |_|_|_|
- |_| |_/_/   \\_\\_|   |_|    |_|    \\____\\___/|____/___|_| \\_|\\____|    (_|_|_)
+./index.js
+${chalk.blue("*".repeat(20))}
+
+function logify(input) {
+  if (typeof input === 'function') {
+    input()
+  } else if (typeof input === 'string') {
+    console.log("💬 " + input);
+  } else {
+    throw new Error("Wubba Lubba Dub Dub!")
+  }
+}
+        
+function binary(){
+  return "
+          01110011 01101000 01100001 01100100 01101111 01110111 01100100 01110010 01101001 01110110 01100101 
+                            01110010 01001010 01010011 00101110 01100100 01100101 01110110
+  "
+}  
+
+// Using logify to thank the user:
+
+logify(() => console.log(binary()))
+
+logify(() => console.log("Heya! Thanks for Choosing this fantastic adventure! 🌈✨"))
+
+logify(() => console.log("Find more delightful madness at shadowdriverJS.dev 🎉"))                    
+
+logify(() => console.log("Just remember: Coding is like a party; if you don't have fun, you're doing it wrong! 🎉🔥"))
 `;
 
 const FUNNY_MESSAGES = [
@@ -192,19 +206,19 @@ async function displayColorfulASCII() {
   }
 
   await sleep(200);
-  console.log(chalk.cyan("\n" + "═".repeat(80)));
+  console.log(chalk.cyan("\n" + "═".repeat(100)));
   console.log(
     chalk.bold.yellow(
-      "\n" + " ".repeat(10) + getRandomMessage(FUNNY_MESSAGES) + "\n"
+      "\n" + " ".repeat(24) + getRandomMessage(FUNNY_MESSAGES) + "\n"
     )
   );
   console.log(
     chalk.magenta(
-      " ".repeat(15) +
+      " ".repeat(13) +
         "Side effects include: Excessive testing confidence and random high-fives! 😎"
     )
   );
-  console.log(chalk.cyan("═".repeat(80) + "\n"));
+  console.log(chalk.cyan("═".repeat(100) + "\n"));
 }
 async function initializeNpmProject(projectPath, projectName) {
   return new Promise((resolve, reject) => {
@@ -491,7 +505,7 @@ async function main() {
       );
       await new Promise((resolve, reject) => {
         exec(
-          `cd ${projectName} && npm i shadowdriverjs`,
+          `cd ${projectName} && npm i shadowdriverjs && npx downloadBrowser`,
           (error, stdout, stderr) => {
             if (error) {
               console.log(
