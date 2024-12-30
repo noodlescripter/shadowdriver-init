@@ -497,6 +497,13 @@ async function main() {
       );
     });
 
+    const installBrowserAnswer = await new Promise((resolve) => {
+      rl.question(
+        chalk.cyan("\n📦 Do you want to install the latest and the gratest chrome browser? (Might not be the latest but we always try and you can also choose from conf browserVersion:xxxx) (Y/n): "),
+        resolve
+      );
+    });
+
     if (!/^n$/i.test(installAnswer)) {
       console.log(
         createBox(
@@ -562,6 +569,35 @@ async function main() {
           }
         );
       });
+    }
+
+    if(!/^n$/i.test(installBrowserAnswer)){
+      console.log(
+        createBox(
+          "🧙‍♂️ Installing the latest chrome... Please wait while we perform some magic...",
+          "cyan"
+        )
+      );
+      await new Promise((resolve, reject) => {
+        exec(
+          `cd ${projectName} && node ./node_modules/shadowdriverjs/package/downloader/downloader.js`,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.log(
+                createBox(
+                  "Failed to install latest chrome! The magic fizzled out!",
+                  "red"
+                )
+              );
+              reject(error);
+              return;
+            }
+            console.log(stdout);
+            resolve();
+          }
+        );
+      });
+
     }
 
     displaySuccessMessage(projectName);
