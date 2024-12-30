@@ -28,4 +28,4 @@ jobs:
       - run: npm ci
       - run: npm publish
         env:
-          NPM_RELEASE_TOKEN: ${{secrets.RELEASE_KEY}}
+          NODE_AUTH_TOKEN: ${{secrets.SHADOWDRIVERJS_INIT_TOKEN}}
