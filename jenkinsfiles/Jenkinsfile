@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+    tools {
+        nodejs 'NodeJS' // Ensure NodeJS is configured in Jenkins Global Tool Configuration
+    }
+    environment {
+        GIT_REPO = 'git@github.com:noodlescripter/shadowdriver-init.git' // SSH configured in master Jenkins
+        BRANCH = 'develop'
+        NPM_TOKEN = credentials('npm-token')  // Retrieve npm token from Jenkins credentials
+    }
+    parameters {
+        string(name: 'VERSION', defaultValue: '1.0.0', description: 'Version of the npm package to publish')
+    }
+    stages {
+        stage('Cloning code base') {
+            steps {
+                echo "Cloning... ${GIT_REPO}"
+                git branch: "${BRANCH}", url: "${GIT_REPO}"
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    // Install dependencies
+                    sh 'npm install'
+                }
+            }
+        }
+        stage('Update Version') {
+            steps {
+                script {
+                    // Update the version in package.json
+                    sh "npm version ${params.VERSION} --no-git-tag-version"
+                }
+            }
+        }
+        stage('Publish to npm') {
+            steps {
+                script {
+                    // Create .npmrc file for authentication
+                    writeFile file: '.npmrc', text: "//registry.npmjs.org/:_authToken=${NPM_TOKEN}"
+                    // Publish the package
+                    sh 'npm publish'
+                }
+            }
+        }
+        stage('Push to repo') {
+            steps {
+                script {
+                    // Create a new branch and push the release
+                    sh "git checkout -b ${params.VERSION}"
+                    sh 'git add .'
+                    sh "git commit -m '${params.VERSION} release attempted'"
+                    sh "git push origin ${params.VERSION}"
+                }
+            }
+        }
+    }
+    post {
+        always {  // Use 'always' to ensure cleanup runs regardless of success or failure
+            // Clean up the .npmrc file after use
+            sh 'rm -f .npmrc'
+        }
+    }
+}

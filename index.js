@@ -93,7 +93,7 @@ module.exports = {
     generate_HTML("./")
   },
 }
-`
+`;
 
 const ASCII_LOGO = `
 ./index.js
@@ -239,11 +239,12 @@ async function initializeNpmProject(projectPath, projectName) {
         packageJson.description =
           "Test automation project using ShadowdriverJS";
         packageJson.scripts = {
-          test: "shadowdriver run",
-          shadowdriver: "shadowdriver run",
+          test: "npx shadow",
+          report_open: "echo \no report",
+          postInstall: "npx downloadBrowser",
         };
         packageJson.dependencies = {
-          shadowdriverjs: "^2.0.0",
+          shadowdriverjs: "^2.0.1",
         };
         packageJson.keywords = ["testing", "automation", "shadowdriver", "e2e"];
         packageJson.author = "";
@@ -402,7 +403,7 @@ describe("Sample Test Suite", async function () {
   })
 })
 
-    `
+    `;
     fs.writeFileSync(`${projectPath}/e2e/sample.spec.js`, sampleSpec);
     displayProgressBar(5, 5);
     await sleep(500);
@@ -505,7 +506,46 @@ async function main() {
       );
       await new Promise((resolve, reject) => {
         exec(
-          `cd ${projectName} && npm i shadowdriverjs && npx downloadBrowser`,
+          `cd ${projectName} && npm i shadowdriverjs`,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.log(
+                createBox(
+                  "Failed to install ShadowdriverJS! The magic fizzled out!",
+                  "red"
+                )
+              );
+              reject(error);
+              return;
+            }
+            console.log(stdout);
+            resolve();
+          }
+        );
+      });
+
+      await new Promise((resolve, reject) => {
+        exec(
+          `cd ${projectName}/node_modules/shadowdriverjs && npm install`,
+          (error, stdout, stderr) => {
+            if (error) {
+              console.log(
+                createBox(
+                  "Failed to install ShadowdriverJS! The magic fizzled out!",
+                  "red"
+                )
+              );
+              reject(error);
+              return;
+            }
+            console.log(stdout);
+            resolve();
+          }
+        );
+      });
+      await new Promise((resolve, reject) => {
+        exec(
+          `cd ${projectName} && touch chromedriver.log`,
           (error, stdout, stderr) => {
             if (error) {
               console.log(
